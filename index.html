@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>CSC ID Search — State Team</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+:root{
+  --bg:#f0f2f7;--bg2:#fff;--bg3:#f7f8fc;--bg4:#eef0f6;
+  --border:#e2e5ef;--border2:#d0d4e4;
+  --accent:#4361ee;--accentl:#eef0fd;
+  --ok:#059669;--okl:#d1fae5;
+  --warn:#d97706;--warnl:#fef3c7;
+  --danger:#dc2626;--dangerl:#fee2e2;
+  --text:#1a1d2e;--text2:#6b7280;--text3:#9ca3af;
+  --r:10px;--sh:0 1px 3px rgba(0,0,0,.08);--shm:0 4px 12px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;min-height:100vh;padding-bottom:24px;}
+
+/* ── LOGIN ── */
+.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#4361ee 0%,#7c3aed 100%);display:flex;align-items:center;justify-content:center;padding:20px;z-index:999;overflow-y:auto;}
+.login-box{background:var(--bg2);border-radius:16px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:visible;position:relative;}
+.login-logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#4361ee,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;margin:0 auto 16px;}
+.login-box h2{font-size:20px;font-weight:700;text-align:center;margin-bottom:4px;}
+.login-box p{font-size:13px;color:var(--text2);text-align:center;margin-bottom:20px;}
+.inp-wrap{margin-bottom:12px;}
+.inp-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.inp{width:100%;background:var(--bg3);border:1.5px solid var(--border2);border-radius:8px;padding:12px 14px;font-size:15px;color:var(--text);font-family:inherit;outline:none;transition:border-color .15s;}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(67,97,238,.1);}
+.inp::placeholder{color:var(--text3);}
+.btn-login{width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:13px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:6px;transition:background .15s;}
+.btn-login:hover{background:#3451d1;}
+.btn-login:active{opacity:.85;}
+.login-msg{font-size:12px;font-weight:500;text-align:center;margin-top:10px;min-height:18px;color:var(--danger);}
+.setup-link{text-align:center;margin-top:16px;font-size:13px;color:var(--text3);position:relative;z-index:10;}
+.setup-link a{color:var(--accent);cursor:pointer;text-decoration:underline;font-weight:500;display:inline-block;padding:10px 20px;background:var(--accentl);border-radius:8px;border:1.5px solid var(--accent);min-height:44px;line-height:24px;}
+.setup-link a:hover{background:#dbeafe;}
+
+/* ── MAIN APP ── */
+.app{display:none;}
+.app.visible{display:block;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#4361ee 0%,#7c3aed 100%);padding:16px 16px 20px;color:#fff;}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.header-title{font-size:17px;font-weight:700;}
+.state-badge{background:rgba(255,255,255,.2);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;}
+.header-sub{font-size:12px;opacity:.8;}
+.conn-row{display:flex;align-items:center;gap:6px;margin-top:8px;}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:#fff;}
+.conn-dot.on{background:#6ee7b7;}.conn-dot.off{background:#fca5a5;}
+.conn-txt{font-size:11px;opacity:.85;}
+.logout-btn{background:rgba(255,255,255,.15);border:none;border-radius:6px;padding:5px 10px;color:#fff;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;}
+
+/* STATS */
+.stats-bar{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;}
+.stat-item{flex:1;min-width:70px;padding:10px 8px;text-align:center;border-right:1px solid var(--border);}
+.stat-item:last-child{border-right:none;}
+.stat-v{font-size:16px;font-weight:700;color:var(--accent);}
+.stat-l{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.4px;}
+
+/* SEARCH */
+.search-wrap{padding:14px 14px 0;}
+.sinp{width:100%;background:var(--bg2);border:1.5px solid var(--border2);border-radius:10px;padding:14px 16px;color:var(--text);font-size:16px;font-family:inherit;outline:none;transition:all .15s;box-shadow:var(--sh);margin-bottom:10px;}
+.sinp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(67,97,238,.1);}
+.sinp::placeholder{color:var(--text3);}
+.btn-row{display:flex;gap:8px;margin-bottom:12px;}
+.btn-search{flex:1;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn-search:active{opacity:.85;}
+.btn-dl{flex:1;background:var(--ok);color:#fff;border:none;border-radius:8px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-dl:active{opacity:.85;}
+.btn-dl:disabled{opacity:.4;cursor:not-allowed;}
+
+/* RESULT */
+.result-area{padding:0 14px;}
+.rcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;box-shadow:var(--sh);}
+.rcard-hd{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.rid{font-size:17px;font-weight:700;font-family:monospace;}
+.rname{font-size:12px;color:var(--text2);margin-top:2px;}
+.bpill{display:inline-block;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;}
+.bp-b{background:var(--dangerl);color:var(--danger);border:1px solid #fca5a5;}
+.bp-u{background:var(--okl);color:var(--ok);border:1px solid #6ee7b7;}
+.bp-n{background:var(--bg4);color:var(--text2);border:1px solid var(--border2);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;}
+.field{background:var(--bg3);border-radius:7px;padding:9px 11px;border:1px solid var(--border);}
+.fl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;font-weight:600;}
+.fv{font-size:13px;font-weight:600;color:var(--text);word-break:break-word;}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.p-r{background:var(--dangerl);color:var(--danger);}
+.p-g{background:var(--okl);color:var(--ok);}
+.p-y{background:var(--warnl);color:var(--warn);}
+.p-b{background:#dbeafe;color:#1d4ed8;}
+.p-w{background:var(--warnl);color:var(--warn);}
+.p-gr{background:var(--bg4);color:var(--text3);}
+
+/* INFO BOXES */
+.info-box{border-radius:8px;padding:12px 14px;margin-top:10px;}
+.ib-red{background:var(--dangerl);border:1px solid #fca5a5;}
+.ib-green{background:var(--okl);border:1px solid #6ee7b7;}
+.ib-warn{background:var(--warnl);border:1px solid #fcd34d;}
+.ib-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}
+.ib-red .ib-label{color:var(--danger);}
+.ib-green .ib-label{color:var(--ok);}
+.ib-warn .ib-label{color:var(--warn);}
+.ib-text{font-size:13px;font-weight:500;line-height:1.5;}
+.ib-red .ib-text{color:var(--danger);}
+.ib-green .ib-text{color:var(--ok);}
+.ib-warn .ib-text{color:var(--warn);}
+
+/* FRAUD CARD */
+.fraud-card{background:var(--dangerl);border:2px solid var(--danger);border-radius:var(--r);padding:14px;margin-bottom:10px;}
+.fraud-hd{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.fraud-title{font-size:14px;font-weight:700;color:var(--danger);}
+
+/* EKYC CARD */
+.ekyc-card{background:var(--bg2);border:1px solid #6ee7b7;border-radius:var(--r);padding:16px;margin-bottom:10px;box-shadow:var(--sh);}
+.ekyc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.ekyc-title{font-size:14px;font-weight:600;}
+
+/* LOADING */
+.loading{text-align:center;padding:40px 20px;color:var(--text2);}
+.spin{width:30px;height:30px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* EMPTY */
+.empty{text-align:center;padding:50px 20px;color:var(--text3);}
+.empty svg{margin:0 auto 12px;display:block;opacity:.2;}
+
+/* SETUP URL MODAL */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:flex-end;justify-content:center;}
+.modal.open{display:flex;}
+.modal-box{background:var(--bg2);border-radius:16px 16px 0 0;padding:24px;width:100%;max-width:500px;}
+.modal-box h3{font-size:16px;font-weight:700;margin-bottom:8px;}
+.modal-box p{font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5;}
+.modal-inp{width:100%;background:var(--bg3);border:1.5px solid var(--border2);border-radius:8px;padding:12px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:10px;}
+.modal-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+.modal-close{background:var(--bg3);color:var(--text2);margin-top:8px;}
+
+/* RESTRICTED */
+.restricted-banner{background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:var(--warn);font-weight:500;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">C</div>
+    <h2>CSC State Team</h2>
+    <p>Login with your state credentials to search and download ID data</p>
+    <div class="inp-wrap">
+      <div class="inp-label">Username</div>
+      <input class="inp" id="l-user" type="text" placeholder="e.g. hp_team" autocomplete="username"
+        onkeydown="if(event.key==='Enter')document.getElementById('l-pass').focus()">
+    </div>
+    <div class="inp-wrap">
+      <div class="inp-label">Password</div>
+      <input class="inp" id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()" id="btn-login">Login</button>
+    <div class="login-msg" id="login-msg"></div>
+    <div class="setup-link">
+      <button onclick="openSetup()" style="color:var(--accent);cursor:pointer;font-weight:600;font-size:13px;display:inline-block;padding:10px 20px;background:var(--accentl);border-radius:8px;border:1.5px solid var(--accent);min-height:44px;font-family:inherit;width:100%;margin-top:4px;">⚙ Change API URL</button>
+    </div>
+    <div id="api-status" style="font-size:12px;color:var(--warn);text-align:center;margin-top:8px;font-weight:500;"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title">CSC ID Search</div>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+      <span class="state-badge" id="state-badge">—</span>
+      <span class="header-sub">State Team Portal</span>
+    </div>
+    <div class="conn-row">
+      <div class="conn-dot" id="conn-dot"></div>
+      <span class="conn-txt" id="conn-txt">Connecting...</span>
+      <span style="margin-left:auto;font-size:11px;opacity:.7;" id="sync-time"></span>
+    </div>
+  </div>
+
+  <!-- State name warning -->
+  <div id="state-warning" style="display:none;background:#fef3c7;border-bottom:1px solid #fcd34d;padding:10px 16px;font-size:12px;color:#92400e;line-height:1.6;"></div>
+
+  <!-- Stats bar -->
+  <div class="stats-bar" id="stats-bar" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+    <div class="stat-item"><div class="stat-v" id="st-total">—</div><div class="stat-l">Total IDs</div></div>
+    <div class="stat-item"><div class="stat-v" id="st-blocked" style="color:var(--danger);">—</div><div class="stat-l">Blocked</div></div>
+    <div class="stat-item"><div class="stat-v" id="st-unblocked" style="color:var(--ok);">—</div><div class="stat-l">Unblocked</div></div>
+    <div class="stat-item"><div class="stat-v" id="st-ekyc" style="color:#2563eb;">—</div><div class="stat-l">EKYC Done</div></div>
+    <div class="stat-item" id="st-fraud-item" style="display:none;"><div class="stat-v" id="st-fraud" style="color:var(--danger);">—</div><div class="stat-l">Fraud</div></div>
+    <div class="stat-item"><div class="stat-v" id="st-wallet" style="color:#d97706;">—</div><div class="stat-l">Wallet Blocked</div></div>
+    <div class="stat-item"><div class="stat-v" id="st-wallet-rdy" style="color:var(--ok);">—</div><div class="stat-l">Wallet Ready</div></div>
+    <div class="stat-item"><div class="stat-v" id="st-perm" style="color:#7c3aed;">—</div><div class="stat-l">Non-Transacting VLE</div></div>
+    <div id="sync-time" style="display:none;">—</div>
+  </div>
+
+  <!-- Search + Download -->
+  <div class="search-wrap">
+    <!-- Admin: state selector to search/download specific state -->
+  <div id="admin-state-select" style="display:none;margin-bottom:10px;">
+    <select id="admin-state-dd" style="width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:8px;padding:12px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;">
+      <option value="">— Select State to Download (Admin) —</option>
+    </select>
+  </div>
+  <input class="sinp" id="sinp" type="text" placeholder="Enter CSC ID to search"
+      inputmode="numeric" pattern="[0-9]*"
+      oninput="this.value=this.value.replace(/\D/g,'')"
+      onkeydown="if(event.key==='Enter')doSearch()">
+    <div class="btn-row">
+      <button class="btn-search" onclick="doSearch()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:4px;"><circle cx="11" cy="11" r="7" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M21 21l-4.35-4.35"/></svg>
+        Search ID
+      </button>
+      <button class="btn-dl" id="btn-dl" onclick="toggleDownloadMenu()" style="position:relative;">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Download ▾
+      </button>
+    </div>
+  </div>
+
+  <!-- Download options menu -->
+  <div id="dl-menu" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin:0 14px 10px;padding:14px;box-shadow:var(--shm);">
+    <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Download Options for <span id="dl-state-name" style="color:var(--accent);"></span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <button onclick="downloadType('blocked')" style="background:var(--dangerl);color:var(--danger);border:1px solid #fca5a5;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+        🔴 Blocked IDs
+      </button>
+      <button onclick="downloadType('unblocked')" style="background:var(--okl);color:var(--ok);border:1px solid #6ee7b7;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+        🟢 Unblocked IDs
+      </button>
+      <button onclick="downloadType('ekyc')" style="background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+        📋 EKYC Data
+      </button>
+      <button onclick="downloadType('wallet')" style="background:#fef3c7;color:#d97706;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+        🔒 Wallet Blocked IDs
+      </button>
+      <button onclick="downloadType('wallet_unblock')" style="background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+        ✅ Wallet Unblock Ready
+      </button>
+      <button onclick="downloadType('all')" style="background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+        📦 All Combined
+      </button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">
+      Downloads in pages of 10,000 rows. Large states will have multiple files.<br>
+      Each file is labeled: <em>State_Blocked_Page1.xlsx</em>, <em>State_Blocked_Page2.xlsx</em> etc.
+    </div>
+    <div id="dl-progress" style="font-size:12px;font-weight:500;color:var(--accent);min-height:16px;line-height:1.6;"></div>
+    <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
+      <button onclick="debugStates()" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:6px 12px;font-size:11px;cursor:pointer;font-family:inherit;">
+        🔍 Debug: Show State Names in Sheet
+      </button>
+      <div id="debug-states" style="font-size:11px;color:var(--text2);margin-top:8px;line-height:1.7;word-break:break-all;"></div>
+    </div>
+  </div>
+
+  <!-- Result area -->
+  <div class="result-area" id="result-area">
+    <div class="empty">
+      <svg width="44" height="44" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke-width="1.5"/><path stroke-linecap="round" stroke-width="1.5" d="M21 21l-4.35-4.35"/></svg>
+      <p>Enter a CSC ID above and press Search</p>
+    </div>
+  </div>
+</div>
+
+<!-- Setup URL Modal -->
+<div class="modal" id="setup-modal">
+  <div class="modal-box">
+    <h3>API URL Setup</h3>
+    <p>Paste the Google Apps Script Web App URL provided by your admin.</p>
+    <input class="modal-inp" id="setup-url-inp" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+    <button class="modal-btn" onclick="saveSetupUrl()">Save & Connect</button>
+    <button class="modal-btn modal-close" onclick="closeSetup()">Cancel</button>
+    <div class="login-msg" id="setup-msg"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const API_KEY='csc_api_url_v2';
+const SESSION_KEY='csc_session_v2';
+
+// ── Apps Script URL — hardcoded, no manual entry needed ──────────
+const HARDCODED_API_URL = 'https://script.google.com/macros/s/AKfycbx1f20fUJvSRkBSQTcGJ1sFjHzrxX0LetBoZrGhVNFOSXNKP9fTuRjDArNqm1oTjAJl/exec';
+// ─────────────────────────────────────────────────────────────────
+
+let API_URL = HARDCODED_API_URL || localStorage.getItem(API_KEY) || '';
+let SESSION={user:'',pass:'',state:'',role:''};
+
+// ── Init ──────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  API_URL = HARDCODED_API_URL || localStorage.getItem(API_KEY) || '';
+  const statusEl=document.getElementById('api-status');
+  if(HARDCODED_API_URL){
+    // URL is hardcoded — hide setup link from state teams
+    const setupLink=document.querySelector('.setup-link');
+    if(setupLink) setupLink.style.display='none';
+    if(statusEl) statusEl.textContent='';
+  } else if(API_URL){
+    if(statusEl) statusEl.textContent='✓ API URL is configured';
+  } else {
+    if(statusEl) statusEl.innerHTML='⚠ No API URL set — tap <b>Change API URL</b> below';
+    if(statusEl) statusEl.style.color='var(--warn)';
+  }
+  const saved=localStorage.getItem(SESSION_KEY);
+  if(saved){
+    try{
+      SESSION=JSON.parse(saved);
+      if(SESSION.user&&SESSION.pass&&SESSION.state) showApp();
+    }catch(e){}
+  }
+});
+
+// ── LOGIN ─────────────────────────────────────────────────
+async function doLogin(){
+  const user=document.getElementById('l-user').value.trim();
+  const pass=document.getElementById('l-pass').value.trim();
+  const msg=document.getElementById('login-msg');
+  const btn=document.getElementById('btn-login');
+  if(!user||!pass){msg.textContent='Please enter username and password';return;}
+  if(!API_URL){msg.textContent='No API URL set. Tap "Change API URL" below.';return;}
+  btn.textContent='Logging in...';btn.disabled=true;
+  msg.textContent='';
+  try{
+    const res=await fetch(`${API_URL}?action=login&user=${enc(user)}&pass=${enc(pass)}`);
+    const data=await res.json();
+    if(data.ok){
+      SESSION={user,pass,state:data.state,role:data.role||'state'};
+      localStorage.setItem(SESSION_KEY,JSON.stringify(SESSION));
+      showApp();
+    } else {
+      msg.textContent='✗ '+(data.error||'Login failed');
+    }
+  }catch(e){
+    msg.textContent='✗ Cannot connect. Check your internet connection.';
+  }
+  btn.textContent='Login';btn.disabled=false;
+}
+
+function doLogout(){
+  localStorage.removeItem(SESSION_KEY);
+  SESSION={user:'',pass:'',state:''};
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('result-area').innerHTML='<div class="empty"><svg width="44" height="44" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke-width="1.5"/><path stroke-linecap="round" stroke-width="1.5" d="M21 21l-4.35-4.35"/></svg><p>Enter a CSC ID above and press Search</p></div>';
+  document.getElementById('sinp').value='';
+  document.getElementById('l-user').value='';
+  document.getElementById('l-pass').value='';
+  document.getElementById('login-msg').textContent='';
+}
+
+async function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').classList.add('visible');
+  const isAdmin=SESSION.role==='admin';
+  document.getElementById('state-badge').textContent=isAdmin?'🔑 ADMIN':SESSION.state;
+  document.getElementById('state-badge').style.background=isAdmin?'rgba(255,255,255,.3)':'rgba(255,255,255,.2)';
+  document.getElementById('conn-dot').className='conn-dot on';
+  document.getElementById('conn-txt').textContent='Connected · '+(isAdmin?'All States (Admin)':SESSION.state);
+  // Show state selector for admin
+  const adminSel=document.getElementById('admin-state-select');
+  if(adminSel) adminSel.style.display=isAdmin?'block':'none';
+
+  // For state login: fetch state-wise counts via state_data; for admin: use global stats
+  try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),15000);
+    clearTimeout(timeout); // immediately clear — we use our own timeouts below
+
+    // ── Step 1: Global stats (instant) — show for everyone immediately ──
+    try{
+      const gCtrl=new AbortController();
+      const gT=setTimeout(()=>gCtrl.abort(),15000);
+      const gRes=await fetch(`${API_URL}?action=stats`,{signal:gCtrl.signal});
+      clearTimeout(gT);
+      const gData=await gRes.json();
+      if(gData.ok){
+        const B=gData.stats.BLOCKED||0, W=gData.stats.WALLET||0;
+        document.getElementById('st-total').textContent=(B+W).toLocaleString();
+        document.getElementById('st-blocked').textContent=B.toLocaleString();
+        document.getElementById('st-unblocked').textContent=(gData.stats.UNBLOCKED||0).toLocaleString();
+        document.getElementById('st-ekyc').textContent=(gData.stats.EKYC||0).toLocaleString();
+        const sw=document.getElementById('st-wallet');
+        const swr=document.getElementById('st-wallet-rdy');
+        if(sw)  sw.textContent=W.toLocaleString();
+        if(swr) swr.textContent=(gData.stats.WALLET_UNBLOCK||0).toLocaleString();
+        const sp=document.getElementById('st-perm');
+        if(sp) sp.textContent=(gData.stats.PERM||0).toLocaleString();
+        // Fraud — admin only
+        if(isAdmin){
+          const sfi=document.getElementById('st-fraud-item');
+          const sf=document.getElementById('st-fraud');
+          if(sfi) sfi.style.display='';
+          if(sf)  sf.textContent=(gData.stats.FRAUD||0).toLocaleString();
+        }
+        const sync=gData.lastSync&&gData.lastSync!=='Never'?gData.lastSync:'—';
+        document.getElementById('sync-time').textContent='Synced: '+sync;
+        if(sync!=='—') localStorage.setItem('csc_last_sync_display',sync);
+      }
+    }catch(e){
+      console.warn('Global stats failed:',e.message);
+      document.getElementById('sync-time').textContent=localStorage.getItem('csc_last_sync_display')||'—';
+    }
+
+    // ── Step 2: State-specific counts (background, refines Step 1) ──
+    if(!isAdmin){
+      (async()=>{
+        try{
+          const sCtrl=new AbortController();
+          const sT=setTimeout(()=>sCtrl.abort(),60000);
+          const sRes=await fetch(
+            `${API_URL}?action=state_counts&user=${enc(SESSION.user)}&pass=${enc(SESSION.pass)}`,
+            {signal:sCtrl.signal}
+          );
+          clearTimeout(sT);
+          const d2=await sRes.json();
+          if(d2.ok){
+            const B=d2.blocked||0, W=d2.wallet||0;
+            document.getElementById('st-total').textContent=(B+W).toLocaleString();
+            document.getElementById('st-blocked').textContent=B.toLocaleString();
+            document.getElementById('st-unblocked').textContent=(d2.unblocked||0).toLocaleString();
+            document.getElementById('st-ekyc').textContent=(d2.ekyc||0).toLocaleString();
+            const sw=document.getElementById('st-wallet');
+            const swr=document.getElementById('st-wallet-rdy');
+            if(sw)  sw.textContent=W.toLocaleString();
+            if(swr) swr.textContent=(d2.walletUnblock||0).toLocaleString();
+            const sp=document.getElementById('st-perm');
+            if(sp) sp.textContent=(d2.perm||0).toLocaleString();
+            // Fraud tile stays hidden for state logins
+          }
+        }catch(e2){
+          console.warn('state_counts timed out — keeping global counts');
+        }
+      })();
+    }
+
+  }catch(e){
+    console.warn('Stats failed:',e.message);
+  }
+
+  // Verify state name + populate admin dropdown
+  try{
+    const ctrl2=new AbortController();
+    const t2=setTimeout(()=>ctrl2.abort(),10000);
+    const r2=await fetch(`${API_URL}?action=states`,{signal:ctrl2.signal});
+    clearTimeout(t2);
+    const d2=await r2.json();
+    if(d2.ok && d2.states && d2.states.length){
+      const isAdmin=SESSION.role==='admin';
+      // Populate admin dropdown
+      const dd=document.getElementById('admin-state-dd');
+      if(dd && isAdmin){
+        // Clear existing options first to prevent duplicates on re-login
+        while(dd.options.length > 1) dd.remove(1);
+        d2.states.sort().forEach(s=>{
+          const opt=document.createElement('option');
+          opt.value=s; opt.textContent=s; dd.appendChild(opt);
+        });
+      }
+      // State team: verify name match
+      if(!isAdmin){
+        const match=d2.states.find(s=>s.toLowerCase()===SESSION.state.toLowerCase());
+        const warningEl=document.getElementById('state-warning');
+        if(!match){
+          const similar=d2.states.filter(s=>
+            s.toLowerCase().includes(SESSION.state.toLowerCase().slice(0,4))||
+            SESSION.state.toLowerCase().includes(s.toLowerCase().slice(0,4))
+          ).slice(0,3);
+          if(warningEl){
+            warningEl.style.display='block';
+            warningEl.innerHTML=`⚠ State "<b>${SESSION.state}</b>" not found in sheet.<br>
+              ${similar.length?`Similar: <b>${similar.join(', ')}</b>`:'Ask admin to verify state name.'}<br>
+              <small>STATE_CREDENTIALS must match Sheet State column exactly.</small>`;
+          }
+        } else {
+          if(match!==SESSION.state){
+            SESSION.state=match;
+            localStorage.setItem(SESSION_KEY,JSON.stringify(SESSION));
+            document.getElementById('state-badge').textContent=match;
+          }
+          document.getElementById('state-warning')&&(document.getElementById('state-warning').style.display='none');
+        }
+      }
+    }
+  }catch(e){ console.warn('State verify:',e.message); }
+}
+
+// ── SEARCH ────────────────────────────────────────────────
+// ── Two-phase search ──────────────────────────────────────────
+// Phase 1: Blocked + Unblocked + EKYC + small sheets (~10-15s max)
+// Phase 2: WalletBlockedIDs + WalletUnblockReady (~10-15s max)
+// Phase 2 runs automatically if Phase 1 finds nothing meaningful.
+async function doSearch(){
+  const id=document.getElementById('sinp').value.trim();
+  const area=document.getElementById('result-area');
+  if(!id||id.length<6){
+    area.innerHTML='<div class="empty"><p>Please enter a valid CSC ID (min 6 digits)</p></div>';
+    return;
+  }
+
+  // ── Phase 1 ──────────────────────────────────────────────────
+  area.innerHTML=`<div class="loading"><div class="spin"></div>
+    <p>Phase 1: Searching Blocked / Unblocked / EKYC...</p>
+    <p style="font-size:12px;color:var(--text3);margin-top:6px;">Scanning 3 lakh rows — may take 15-20 seconds</p>
+  </div>`;
+
+  let phase1Result = null;
+  try{
+    const ctrl1=new AbortController();
+    const t1=setTimeout(()=>ctrl1.abort(),35000);
+    const res1=await fetch(
+      `${API_URL}?action=search&id=${enc(id)}&user=${enc(SESSION.user)}&pass=${enc(SESSION.pass)}`,
+      {signal:ctrl1.signal,mode:'cors'}
+    );
+    clearTimeout(t1);
+    const d1=await res1.json();
+    if(!d1.ok){
+      if(d1.error==='Unauthorized'){doLogout();return;}
+      area.innerHTML=`<div class="empty"><p>Search error: ${d1.error}</p></div>`;
+      return;
+    }
+    phase1Result = d1.result;
+  }catch(e){
+    if(e.name==='AbortError'){
+      area.innerHTML=`<div class="empty">
+        <p style="margin-bottom:12px;">⏱ Phase 1 timed out. Apps Script is busy — please try again.</p>
+        <button onclick="doSearch()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">🔄 Try Again</button>
+        <p style="font-size:12px;color:var(--text3);margin-top:8px;">Second attempt is usually faster (cached)</p>
+      </div>`;
+    } else {
+      area.innerHTML=`<div class="empty"><p>Search failed: ${e.message}<br><small>Check connection and try again.</small></p></div>`;
+    }
+    return;
+  }
+
+  // ── Phase 2 — always runs: Unblocked + Wallet Blocked + Wallet Ready ──
+  area.innerHTML=`<div class="loading"><div class="spin"></div>
+    <p>Phase 2: Searching Unblocked / Wallet Blocked / Wallet Ready...</p>
+    <p style="font-size:12px;color:var(--text3);margin-top:6px;">Checking remaining sheets...</p>
+  </div>`;
+  try{
+    const ctrl2=new AbortController();
+    const t2=setTimeout(()=>ctrl2.abort(),35000);
+    const res2=await fetch(
+      `${API_URL}?action=search_phase2&id=${enc(id)}&user=${enc(SESSION.user)}&pass=${enc(SESSION.pass)}`,
+      {signal:ctrl2.signal,mode:'cors'}
+    );
+    clearTimeout(t2);
+    const d2=await res2.json();
+    if(d2.ok && d2.result){
+      const p2=d2.result;
+      // Merge wallet data always
+      if(p2.wallet)             phase1Result.wallet             = p2.wallet;
+      if(p2.walletUnblockReady) phase1Result.walletUnblockReady = p2.walletUnblockReady;
+      // Merge unblocked — if Phase 1 found no block record, use unblocked as master
+      if(p2.unblocked && p2.unblockedVisible){
+        phase1Result.unblocked = p2.unblocked;
+        if(!phase1Result.found || phase1Result.master['Status']==='Not in Blocked List'){
+          phase1Result.found  = true;
+          phase1Result.master = Object.assign({}, p2.unblocked,
+            {'Status':'Unblocked','Status Raw':'Unblocked'});
+        }
+      }
+      // If Phase 1 found nothing but Phase 2 has wallet data
+      if(!phase1Result.found && p2.found && p2.walletMaster){
+        phase1Result.found  = true;
+        phase1Result.master = p2.walletMaster;
+      }
+      // Enrich placeholder master with wallet data
+      if(phase1Result.master && phase1Result.master['Status']==='Not in Blocked List' && p2.walletMaster){
+        phase1Result.master = p2.walletMaster;
+      }
+    }
+  }catch(e){
+    console.warn('Phase 2 timeout or error:',e.message);
+    if(phase1Result) phase1Result._phase2Error = true;
+  }
+
+  renderResult(phase1Result, id);
+}
+
+function renderResult(r,id){
+  const area=document.getElementById('result-area');
+  // Phase 2 error notice
+  let phase2Notice='';
+  if(r&&r._phase2Error){
+    phase2Notice=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;margin-bottom:10px;">
+      ⚠ Wallet sheet search timed out. Result shows Blocked/EKYC data only.
+      <button onclick="doSearch()" style="margin-left:8px;background:#d97706;color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">🔄 Retry</button>
+    </div>`;
+  }
+
+  if(!r||!r.found){
+    area.innerHTML=phase2Notice+`<div class="rcard">
+      <div class="rcard-hd"><div><div class="rid">${id}</div></div><div class="bpill bp-n">Not Found</div></div>
+      <p style="font-size:13px;color:var(--text2);">This CSC ID is not in Blocked, Unblocked, EKYC, or Wallet lists. It may be active or not registered.</p>
+    </div>`;
+    return;
+  }
+  const m   = r.master             || {};
+  const ekyc= r.ekyc               || null;
+  const wlt = r.wallet             || null;
+  const wur = r.walletUnblockReady || null;   // eKYC matched wallet — unblock action pending
+  const h   = r.history || null;
+  const fr  = r.fraud   || null;
+  const pm  = r.perm    || null;
+
+  // Determine status safely
+  const rawStatus       = m['Status'] || '';
+  const isBlocked       = rawStatus === 'Blocked';
+  const isUnblocked     = rawStatus === 'Unblocked';
+  const isWalletReady   = rawStatus === 'Wallet Unblock Ready' || !!wur;
+  const isWalletBlocked = rawStatus === 'Wallet Blocked' || (!!wlt && !wur);
+  const isNotInList     = !isBlocked && !isUnblocked && !isWalletBlocked && !isWalletReady;
+
+  let statusLabel, statusClass;
+  if(isWalletReady){
+    statusLabel = '✅ Wallet Unblock Ready';
+    statusClass = 'bp-u';
+  } else if(isWalletBlocked){
+    statusLabel = '🔒 Wallet Blocked · eKYC Pending';
+    statusClass = 'bp-b';
+  } else if(isBlocked){
+    statusLabel = h ? 'Blocked → Sent for Unblocking' : 'Blocked';
+    statusClass = 'bp-b';
+  } else if(isUnblocked){
+    statusLabel = 'Unblocked';
+    statusClass = 'bp-u';
+  } else {
+    statusLabel = ekyc ? 'Not in Block List · eKYC Done' : 'Not in Block List';
+    statusClass = 'bp-n';
+  }
+
+  let html='';
+
+  // Restricted banner
+  if(r.restricted){
+    html+=`<div class="restricted-banner">⚠ This ID belongs to a different state. Limited information shown.</div>`;
+  }
+
+  // Main status card
+  html+=`<div class="rcard">
+    <div class="rcard-hd">
+      <div><div class="rid">${id}</div><div class="rname">${m['VLE Name']||'—'}</div></div>
+      <div style="text-align:right;">
+        <div class="bpill ${statusClass}">${statusLabel}</div>
+        ${fr?'<div style="font-size:11px;color:var(--danger);font-weight:700;margin-top:5px;">🚨 FRAUD FLAGGED</div>':''}
+        ${h?`<div style="font-size:11px;color:var(--ok);margin-top:4px;">✓ Sent for unblocking: <b>${h['Processed Date']||'—'}</b></div>`:''}
+        ${pm?`<div style="font-size:11px;color:var(--warn);margin-top:4px;">⚠ Permanently Closed: <b>${pm['Sent Date']||'—'}</b></div>`:''}
+        ${wur?`<div style="font-size:11px;color:var(--ok);font-weight:700;margin-top:4px;">✅ eKYC Done on ${wur['eKYC Date']||'—'} — Wallet Unblock Action Pending</div>`
+             :wlt?`<div style="font-size:11px;color:var(--warn);margin-top:4px;">🔒 Wallet blocked since: <b>${wlt['Wallet Blocked Date']||'—'}</b> · eKYC pending</div>`:''}
+      </div>
+    </div>`;
+
+  if(!r.restricted){
+    html+=`<div class="grid2">
+      <div class="field"><div class="fl">State</div><div class="fv">${m['State']||'—'}</div></div>
+      <div class="field"><div class="fl">District</div><div class="fv">${m['District']||'—'}</div></div>
+    </div>
+    <div class="grid3">
+      <div class="field"><div class="fl">Block Status</div><div class="fv"><span class="pill ${isBlocked||isWalletBlocked?'p-r':isUnblocked?'p-g':'p-y'}">${m['Status Raw']||m['Status']||'—'}</span></div></div>
+      <div class="field"><div class="fl">Unblock Date</div><div class="fv" style="font-size:11px;">${m['Unblock Date']||'—'}</div></div>
+      <div class="field"><div class="fl">Unblock Via</div><div class="fv" style="font-size:11px;">${m['Unblock Type']||'—'}</div></div>
+    </div>`;
+
+    if((isBlocked||isWalletBlocked)&&m['Remarks']){
+      html+=`<div class="info-box ib-red">
+        <div class="ib-label">Reason / Remarks</div>
+        <div class="ib-text">${m['Remarks']}</div>
+      </div>`;
+    }
+    if(h){
+      html+=`<div class="info-box ib-green">
+        <div class="ib-label">✓ Sent for Unblocking</div>
+        <div class="ib-text">Processed on ${h['Processed Date']||'—'}</div>
+      </div>`;
+    }
+    if(pm){
+      html+=`<div class="info-box ib-warn">
+        <div class="ib-label">Permanently Closed</div>
+        <div class="ib-text">${pm['Closed Reason']||'—'}${pm['Comments']?' — '+pm['Comments']:''}</div>
+      </div>`;
+    }
+  }
+  html+='</div>';
+
+  // Wallet Unblock Ready card — shown when eKYC matched wallet block (action pending)
+  if(wur){
+    html+=`<div class="ekyc-card" style="border-color:#6ee7b7;background:rgba(5,150,105,.06);">
+      <div class="ekyc-hd">
+        <div>
+          <div class="ekyc-title" style="color:var(--ok);">✅ Wallet Unblock Ready</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px;">eKYC verified — wallet can now be unblocked</div>
+        </div>
+        <span class="pill p-g">Action Pending</span>
+      </div>
+      <div class="grid3">
+        <div class="field"><div class="fl">Wallet Blocked Date</div><div class="fv">${wur['Wallet Blocked Date']||'—'}</div></div>
+        <div class="field"><div class="fl">eKYC Done Date</div><div class="fv" style="color:var(--ok);font-weight:600;">${wur['eKYC Date']||'—'}</div></div>
+        <div class="field"><div class="fl">Action</div><div class="fv"><span style="background:var(--okl);color:var(--ok);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;">${wur['Action']||'UNBLOCK'}</span></div></div>
+      </div>
+    </div>`;
+  }
+
+  // Wallet Blocked card — shown when in WalletBlockedIDs but NOT yet in WalletUnblockReady
+  if(wlt && !wur){
+    html+=`<div class="ekyc-card" style="border-color:#fcd34d;background:rgba(251,191,36,.06);">
+      <div class="ekyc-hd">
+        <div><div class="ekyc-title" style="color:var(--warn);">🔒 Wallet Block Status</div></div>
+        <span class="pill p-r">eKYC Pending</span>
+      </div>
+      <div class="grid3">
+        <div class="field"><div class="fl">Wallet Blocked Date</div><div class="fv">${wlt['Wallet Blocked Date']||'—'}</div></div>
+        <div class="field"><div class="fl">eKYC Status</div><div class="fv"><span style="color:var(--danger);">✗ Not Done</span></div></div>
+        <div class="field"><div class="fl">Action Required</div><div class="fv" style="font-size:12px;color:var(--warn);font-weight:600;">Complete eKYC first</div></div>
+      </div>
+    </div>`;
+  }
+
+  // EKYC card
+  let ekycDate='—', ekycState='—', ekycDistrict='—', ekycId='—';
+  let ekycDone=false;
+  if(ekyc){
+    ekycDone=true;
+    ekycId      = ekyc['CSC ID']        || ekyc['cscid']          || ekyc['csc_id']     || id;
+    ekycDate    = ekyc['EKYC Date']     || ekyc['ekyc_date']      || ekyc['date']        || '—';
+    ekycState   = ekyc['EKYC State']    || ekyc['ekyc_state']     || ekyc['State']       || '—';
+    ekycDistrict= ekyc['EKYC District'] || ekyc['ekyc_district']  || ekyc['District']    || '—';
+    if(ekycDate && ekycDate!=='—') ekycDate=String(ekycDate).slice(0,10);
+  }
+  html+=`<div class="ekyc-card">
+    <div class="ekyc-hd">
+      <div>
+        <div class="ekyc-title">EKYC Status</div>
+        ${ekycDone&&ekycId&&ekycId!=='—'?`<div style="font-size:11px;color:var(--text2);margin-top:2px;">CSC ID: ${ekycId}</div>`:''}
+      </div>
+      <span class="pill ${ekycDone?'p-g':'p-r'}">${ekycDone?'✓ EKYC Done':'✗ Not Done'}</span>
+    </div>
+    <div class="grid3">
+      <div class="field"><div class="fl">EKYC Date</div><div class="fv">${ekycDate}</div></div>
+      <div class="field"><div class="fl">State</div><div class="fv">${ekycState}</div></div>
+      <div class="field"><div class="fl">District</div><div class="fv">${ekycDistrict}</div></div>
+    </div>
+  </div>`;
+
+  // Fraud card
+  if(fr){
+    html+=`<div class="fraud-card">
+      <div class="fraud-hd">
+        <svg width="18" height="18" fill="none" stroke="var(--danger)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        <div class="fraud-title">Fraud Flag</div>
+        <span class="pill p-r" style="margin-left:auto;">🚨 Fraud ID</span>
+      </div>
+      <div class="grid2" style="margin-bottom:8px;">
+        <div class="field"><div class="fl">Approved By</div><div class="fv">${fr['Approved By']||'—'}</div></div>
+        <div class="field"><div class="fl">Approval Date</div><div class="fv">${fr['Approval Date']||'—'}</div></div>
+      </div>
+      <div class="field" style="margin-bottom:8px;"><div class="fl">Remarks</div><div class="fv" style="font-size:12px;white-space:normal;color:var(--warn);">${fr['Remarks']||'—'}</div></div>
+      <div class="field"><div class="fl">Description</div><div class="fv" style="font-size:12px;white-space:normal;">${fr['App Description']||'—'}</div></div>
+    </div>`;
+  }
+
+  area.innerHTML=phase2Notice+html;
+}
+
+// ── DOWNLOAD MENU ────────────────────────────────────────
+function toggleDownloadMenu(){
+  const menu=document.getElementById('dl-menu');
+  const isOpen=menu.style.display!=='none';
+  menu.style.display=isOpen?'none':'block';
+  document.getElementById('dl-state-name').textContent=SESSION.state;
+}
+
+// ── DOWNLOAD BY TYPE — paginated 2000 rows per file ───────
+async function downloadType(type){
+  const prog=document.getElementById('dl-progress');
+  const PAGE=10000;
+  // Admin: use dropdown selection; state team: use own state
+  const isAdmin=SESSION.role==='admin';
+  const dd=document.getElementById('admin-state-dd');
+  const targetState=isAdmin?(dd&&dd.value?dd.value:''):'';
+  if(isAdmin&&!targetState){
+    prog.style.color='var(--warn)';
+    prog.textContent='⚠ Admin: please select a state from the dropdown first.';
+    return;
+  }
+  prog.style.color='var(--accent)';
+  prog.textContent='⏳ Fetching page 1...';
+  let page=1; let totalFetched=0; let hasMore=true;
+
+  while(hasMore){
+    try{
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>controller.abort(),45000);
+      prog.textContent=`⏳ Fetching page ${page} (${totalFetched.toLocaleString()} rows so far)...`;
+      const stateParam=isAdmin?`&state=${enc(targetState)}`:'';
+      const url=`${API_URL}?action=state_data&user=${enc(SESSION.user)}&pass=${enc(SESSION.pass)}&type=${enc(type)}&page=${page}&pagesize=${PAGE}${stateParam}`;
+      const res=await fetch(url,{signal:controller.signal});
+      clearTimeout(timeout);
+      const data=await res.json();
+
+      if(!data.ok){
+        if(data.error==='Unauthorized'){doLogout();return;}
+        throw new Error(data.error);
+      }
+
+      const rows=data.rows||[];
+      if(!rows.length){ hasMore=false; break; }
+
+      // Download this page as Excel
+      const wb=XLSX.utils.book_new();
+      const ws=XLSX.utils.json_to_sheet(rows);
+      ws['!cols']=[{wch:16},{wch:22},{wch:16},{wch:18},{wch:10},{wch:12},{wch:20},{wch:14},{wch:40},{wch:10},{wch:14},{wch:16},{wch:16}];
+      const typeLabels={'blocked':'Blocked','unblocked':'Unblocked','ekyc':'EKYC',
+                        'wallet':'WalletBlocked','wallet_unblock':'WalletUnblockReady','all':'AllCombined'};
+      const sheetLabel=typeLabels[type]||type;
+      const stateName=(isAdmin?targetState:SESSION.state)||'AllStates';
+      XLSX.utils.book_append_sheet(wb,ws,`${stateName.slice(0,20)}_P${page}`);
+      const date=new Date().toISOString().slice(0,10);
+      const fname=`CSC_${stateName.replace(/\s+/g,'_')}_${sheetLabel}_Page${page}_${date}.xlsx`;
+      XLSX.writeFile(wb,fname);
+
+      totalFetched+=rows.length;
+      prog.textContent=`✓ Page ${page} downloaded (${rows.length} rows). Total: ${totalFetched.toLocaleString()}`;
+
+      // Check if more pages exist
+      hasMore=data.hasMore===true;
+      if(hasMore){ page++; await new Promise(r=>setTimeout(r,1000)); }
+
+    }catch(e){
+      if(e.name==='AbortError'){
+        prog.style.color='var(--warn)';
+        prog.textContent=`Page ${page} timed out. Downloaded ${totalFetched.toLocaleString()} rows so far. Try again for remaining pages.`;
+      } else {
+        prog.style.color='var(--danger)';
+        prog.textContent='Error: '+e.message;
+      }
+      hasMore=false;
+    }
+  }
+
+  if(totalFetched>0){
+    prog.style.color='var(--ok)';
+    prog.textContent=`✓ Complete! ${totalFetched.toLocaleString()} rows in ${page} file(s) downloaded.`;
+  } else {
+    prog.style.color='var(--warn)';
+    const stateWarn=document.getElementById('state-warning');
+    const hint=stateWarn&&stateWarn.style.display!=='none'?' (State name mismatch detected — see warning above)':'';
+    const sn=(isAdmin?targetState:SESSION.state)||'selected state';
+    prog.textContent=`No data found for "${sn}" in this category.${hint} Check that admin has synced data and the state name matches exactly.`;
+  }
+}
+
+// ── DEBUG: Show actual state names in sheet ───────────────
+async function debugStates(){
+  const el=document.getElementById('debug-states');
+  el.textContent='⏳ Fetching state names from Google Sheet...';
+  el.style.color='var(--accent)';
+  try{
+    const ctrl=new AbortController();
+    setTimeout(()=>ctrl.abort(),15000);
+    const res=await fetch(`${API_URL}?action=states`,{signal:ctrl.signal});
+    const data=await res.json();
+    if(data.ok){
+      const states=data.states||[];
+      // Check if logged-in state matches any
+      const exact=states.find(s=>s===SESSION.state);
+      const caseMatch=states.find(s=>s.toLowerCase()===SESSION.state.toLowerCase());
+      let html=`<b>Your login state:</b> "${SESSION.state}"<br>`;
+      html+=`<b>Sheet has ${states.length} unique state values:</b><br>`;
+      html+=states.map(s=>{
+        const isExact=s===SESSION.state;
+        const isCase=s.toLowerCase()===SESSION.state.toLowerCase();
+        const mark=isExact?'✅':isCase?'⚠️ (case mismatch)':'';
+        return `• ${s} ${mark}`;
+      }).join('<br>');
+      if(!exact&&caseMatch){
+        html+=`<br><br>⚠️ <b>Case mismatch found!</b> Sheet has "<b>${caseMatch}</b>" but your credential says "<b>${SESSION.state}</b>".<br>
+          Fix: Update STATE_CREDENTIALS in Apps Script to use exact value: <code style="background:var(--bg4);padding:1px 4px;">${caseMatch}</code>`;
+      } else if(!exact&&!caseMatch){
+        html+=`<br><br>❌ <b>"${SESSION.state}" not found in sheet at all.</b><br>
+          The State column in your BlockedIDs sheet does not have this state name.<br>
+          Either: (1) Admin hasn't synced yet, or (2) State name in credentials is wrong.`;
+      } else {
+        html+=`<br><br>✅ <b>State name matches exactly.</b> Data should download. If still empty, admin may not have synced yet.`;
+      }
+      el.innerHTML=html;
+      el.style.color='var(--text)';
+    } else {
+      el.textContent='Error: '+(data.error||'Unknown');
+      el.style.color='var(--danger)';
+    }
+  }catch(e){
+    el.textContent='Failed to fetch states: '+e.message;
+    el.style.color='var(--danger)';
+  }
+}
+
+// ── API URL SETUP ─────────────────────────────────────────
+function openSetup(){
+  document.getElementById('setup-url-inp').value=API_URL||'';
+  document.getElementById('setup-modal').classList.add('open');
+}
+function closeSetup(){document.getElementById('setup-modal').classList.remove('open');}
+async function saveSetupUrl(){
+  const url=document.getElementById('setup-url-inp').value.trim();
+  const msg=document.getElementById('setup-msg');
+  if(!url){msg.textContent='Please enter a URL';return;}
+  msg.textContent='⏳ Testing...';
+  try{
+    const res=await fetch(url+'?action=ping');
+    const data=await res.json();
+    if(data.ok){
+      localStorage.setItem(API_KEY,url);
+      API_URL=url;
+      msg.textContent='✓ Connected!';
+      setTimeout(closeSetup,1200);
+    } else {
+      msg.textContent='✗ Failed: '+(data.error||'Unknown');
+    }
+  }catch(e){msg.textContent='✗ Cannot connect. Check URL.';}
+}
+
+const enc=v=>encodeURIComponent(v);
+
+// Helper: get value from object trying multiple possible key names
+function getVal(obj, ...keys){
+  for(const k of keys){
+    if(obj[k]!==undefined && obj[k]!==null && String(obj[k]).trim()!=='')
+      return String(obj[k]).trim();
+  }
+  return '—';
+}
+</script>
+</body>
+</html>
