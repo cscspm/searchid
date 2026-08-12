@@ -290,7 +290,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
         🔒 Wallet Blocked IDs
       </button>
       <button onclick="downloadType('wallet_unblock')" style="background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
-        ✅ Wallet Unblock Ready
+        ✅ Wallet Unblocked (eKYC)
       </button>
       <button onclick="downloadType('perm')" style="background:#ede9fe;color:#7c3aed;border:1px solid #c4b5fd;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
         🚫 Non-Transacting VLE
@@ -721,7 +721,7 @@ function renderResult(r,id){
 
   let statusLabel, statusClass;
   if(isWalletReady){
-    statusLabel = '✅ Wallet Unblock Ready';
+    statusLabel = '✅ Wallet Unblocked (eKYC Matched)';
     statusClass = 'bp-u';
   } else if(isWalletBlocked){
     statusLabel = '🔒 Wallet Blocked · eKYC Pending';
@@ -753,7 +753,7 @@ function renderResult(r,id){
         ${fr?'<div style="font-size:11px;color:var(--danger);font-weight:700;margin-top:5px;">🚨 FRAUD FLAGGED</div>':''}
         ${h?`<div style="font-size:11px;color:var(--ok);margin-top:4px;">✓ Sent for unblocking: <b>${_fmtDate(h['Processed Date'])}</b></div>`:''}
         ${pm?`<div style="font-size:11px;color:var(--warn);margin-top:4px;">⚠ Permanently Closed: <b>${_fmtDate(pm['Sent Date'])}</b></div>`:''}
-        ${wur?`<div style="font-size:11px;color:var(--ok);font-weight:700;margin-top:4px;">✅ eKYC Done on ${_fmtDate(wur['eKYC Date'],true)} — Wallet Unblock Action Pending</div>`
+        ${wur?`<div style="font-size:11px;color:var(--ok);font-weight:700;margin-top:4px;">✅ eKYC matched on ${_fmtDate(wur['eKYC Date'],true)} — Wallet Unblocked</div>`
              :wlt?`<div style="font-size:11px;color:var(--warn);margin-top:4px;">🔒 Wallet blocked since: <b>${_fmtDate(wlt['Wallet Blocked Date'])}</b> · eKYC pending</div>`:''}
       </div>
     </div>`;
@@ -826,20 +826,20 @@ function renderResult(r,id){
   }
   html+='</div>';
 
-  // Wallet Unblock Ready card — shown when eKYC matched wallet block (action pending)
+  // Wallet Unblocked (via eKYC match) card — shown as a completed, active state
   if(wur){
     html+=`<div class="ekyc-card" style="border-color:#6ee7b7;background:rgba(5,150,105,.06);">
       <div class="ekyc-hd">
         <div>
-          <div class="ekyc-title" style="color:var(--ok);">✅ Wallet Unblock Ready</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px;">eKYC verified — wallet can now be unblocked</div>
+          <div class="ekyc-title" style="color:var(--ok);">✅ Wallet Unblocked</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px;">eKYC matched — wallet unblocked immediately</div>
         </div>
-        <span class="pill p-g">Action Pending</span>
+        <span class="pill p-g" style="background:var(--okl);color:var(--ok);">● Active</span>
       </div>
       <div class="grid3">
         <div class="field"><div class="fl">Wallet Blocked Date</div><div class="fv">${wur['Wallet Blocked Date']||'—'}</div></div>
         <div class="field"><div class="fl">eKYC Done Date</div><div class="fv" style="color:var(--ok);font-weight:600;">${_fmtDate(wur['eKYC Date'],true)}</div></div>
-        <div class="field"><div class="fl">Action</div><div class="fv"><span style="background:var(--okl);color:var(--ok);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;">${wur['Action']||'UNBLOCK'}</span></div></div>
+        <div class="field"><div class="fl">Status</div><div class="fv"><span style="background:var(--okl);color:var(--ok);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;">UNBLOCKED</span></div></div>
       </div>
     </div>`;
   }
@@ -1041,7 +1041,7 @@ async function downloadType(type){
       const ws=XLSX.utils.json_to_sheet(rows);
       ws['!cols']=[{wch:16},{wch:22},{wch:16},{wch:18},{wch:10},{wch:12},{wch:20},{wch:14},{wch:40},{wch:10},{wch:14},{wch:16},{wch:16}];
       const typeLabels={'blocked':'Blocked','unblocked':'Unblocked','ekyc':'EKYC',
-                        'wallet':'WalletBlocked','wallet_unblock':'WalletUnblockReady','perm':'NonTransactingVLE','visits':'VisitHistory','all':'AllCombined'};
+                        'wallet':'WalletBlocked','wallet_unblock':'WalletUnblocked','perm':'NonTransactingVLE','visits':'VisitHistory','all':'AllCombined'};
       const sheetLabel=typeLabels[type]||type;
       const stateName=(isAdmin?targetState:SESSION.state)||'AllStates';
       XLSX.utils.book_append_sheet(wb,ws,`${stateName.slice(0,20)}_P${page}`);
@@ -1072,7 +1072,7 @@ async function downloadType(type){
     prog.style.color='var(--ok)';
     prog.textContent=`✓ Complete! ${totalFetched.toLocaleString()} rows in ${page} file(s) downloaded.`;
     const typeLabels={'blocked':'Blocked IDs','unblocked':'Unblocked IDs','ekyc':'EKYC Data',
-                      'wallet':'Wallet Blocked','wallet_unblock':'Wallet Unblock Ready','perm':'Non-Transacting VLE'};
+                      'wallet':'Wallet Blocked','wallet_unblock':'Wallet Unblocked (eKYC)','perm':'Non-Transacting VLE'};
     logDownloadActivity(typeLabels[type]||type, `${totalFetched.toLocaleString()} rows`, isAdmin?targetState:SESSION.state);
   } else {
     prog.style.color='var(--warn)';
