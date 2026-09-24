@@ -326,15 +326,19 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
     <div id="login-editor" style="display:none;margin-top:12px;padding:12px;background:var(--bg3);border:1.5px solid var(--border2);border-radius:8px;">
       <input type="hidden" id="login-edit-id" value="">
       <div style="margin-bottom:8px;">
-        <div style="font-size:10px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;">Role</div>
-        <select id="login-edit-role" style="width:100%;background:var(--bg2);border:1.5px solid var(--border2);border-radius:6px;padding:8px;font-size:13px;color:var(--text);font-family:inherit;">
-          <option value="state">State Team (full access to their state)</option>
-          <option value="search_only">Search Only (ID search, no downloads)</option>
+        <div style="font-size:10px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;">Access Level</div>
+        <select id="login-edit-role" onchange="updateLoginStateHint()" style="width:100%;background:var(--bg2);border:1.5px solid var(--border2);border-radius:6px;padding:8px;font-size:13px;color:var(--text);font-family:inherit;">
+          <option value="state">Full Access — search, District-Wise Data, DM/DC Analysis, downloads</option>
+          <option value="search_only">Search Only — ID search and nothing else, no downloads</option>
         </select>
       </div>
       <div style="margin-bottom:8px;">
-        <div style="font-size:10px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;">State <span style="font-weight:400;">(exact name, or ALL_STATES for unrestricted search-only)</span></div>
-        <input id="login-edit-state" type="text" placeholder="e.g. Uttar Pradesh" style="width:100%;background:var(--bg2);border:1.5px solid var(--border2);border-radius:6px;padding:8px;font-size:13px;color:var(--text);font-family:inherit;">
+        <div style="font-size:10px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;">State / Scope</div>
+        <select id="login-edit-state" onchange="updateLoginStateHint()" style="width:100%;background:var(--bg2);border:1.5px solid var(--border2);border-radius:6px;padding:8px;font-size:13px;color:var(--text);font-family:inherit;">
+          <option value="">— Select —</option>
+          <option value="ALL_STATES">All States</option>
+        </select>
+        <div id="login-edit-state-hint" style="font-size:10.5px;color:var(--text3);margin-top:4px;"></div>
       </div>
       <div style="margin-bottom:8px;">
         <div style="font-size:10px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;">Username</div>
@@ -1602,13 +1606,50 @@ function exportDistrictData(){
 
 // ── DM/DC ANALYSIS ───────────────────────────────────────────
 // ── Manage State Logins (admin only) ──────────────────────────────────
+let LOGIN_STATES_CACHE=null;
+async function ensureLoginStatesLoaded(){
+  const dd=document.getElementById('login-edit-state');
+  if(LOGIN_STATES_CACHE){
+    return; // options already populated below on first load
+  }
+  try{
+    const res=await fetch(`${API_URL}?action=states`);
+    const data=await res.json();
+    if(data.ok&&data.states&&data.states.length){
+      LOGIN_STATES_CACHE=[...data.states].sort();
+      LOGIN_STATES_CACHE.forEach(s=>{
+        const opt=document.createElement('option');
+        opt.value=s; opt.textContent=s;
+        dd.appendChild(opt);
+      });
+    }
+  }catch(e){ console.warn('Could not load state list for login editor:',e.message); }
+}
+
+function updateLoginStateHint(){
+  const role=document.getElementById('login-edit-role').value;
+  const state=document.getElementById('login-edit-state').value;
+  const hintEl=document.getElementById('login-edit-state-hint');
+  if(state==='ALL_STATES'){
+    hintEl.textContent=role==='search_only'
+      ?'Can search any CSC ID in any state. Still no downloads or other data.'
+      :'Full access across every state — search, District-Wise Data, DM/DC Analysis, and downloads for all of them.';
+  }else if(state){
+    hintEl.textContent=role==='search_only'
+      ?`Can only search CSC IDs belonging to ${state}. No downloads or other data.`
+      :`Full access scoped to ${state} only — same as a normal state team login.`;
+  }else{
+    hintEl.textContent='';
+  }
+}
+
 function toggleLoginsPanel(){
   if(SESSION.role!=='admin'){ alert('Only admin accounts can manage logins.'); return; }
   const panel=document.getElementById('logins-panel');
   const isOpen=panel.style.display!=='none';
   panel.style.display=isOpen?'none':'block';
   if(isOpen){ closeLoginEditor(); }
-  else { loadLoginsList(); } // always fetch fresh on open — never reuse a stale previous load
+  else { loadLoginsList(); ensureLoginStatesLoaded(); } // always fetch fresh on open — never reuse a stale previous load
 }
 
 async function loadLoginsList(){
@@ -1652,11 +1693,24 @@ function escapeHtml(s){
 function openLoginEditor(cred){
   document.getElementById('login-edit-id').value=cred?cred.id:'';
   document.getElementById('login-edit-role').value=cred?cred.role:'state';
-  document.getElementById('login-edit-state').value=cred?cred.state:'';
   document.getElementById('login-edit-user').value=cred?cred.user:'';
   document.getElementById('login-edit-pass').value='';
   document.getElementById('login-edit-pass-hint').textContent=cred?'(leave blank to keep unchanged)':'';
   document.getElementById('login-editor-msg').textContent='';
+  ensureLoginStatesLoaded().then(()=>{
+    const dd=document.getElementById('login-edit-state');
+    // A saved login's state might be an older/differently-cased value the
+    // live state list no longer has verbatim (e.g. "TAMIL NADU" alongside
+    // "Tamil Nadu") — add it as its own option rather than silently
+    // resetting the field to blank, so editing doesn't lose the value.
+    if(cred&&cred.state&&![...dd.options].some(o=>o.value===cred.state)){
+      const opt=document.createElement('option');
+      opt.value=cred.state; opt.textContent=cred.state+' (not in current state list)';
+      dd.appendChild(opt);
+    }
+    dd.value=cred?cred.state:'';
+    updateLoginStateHint();
+  });
   document.getElementById('login-editor').style.display='block';
 }
 
